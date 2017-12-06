@@ -165,7 +165,7 @@ kable(df_numeric, format.args = list(big.mark=",", scientific=F))
 
 ###EDA
 
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =year ))+geom_point()+ggtitle("PM2.5 vs Año")
 ggplot(pollution,aes(x = pm2.5, y =month ))+geom_point()+ggtitle("PM2.5 vs Mes")
 ggplot(pollution,aes(x = pm2.5, y =day ))+geom_point()+ggtitle("PM2.5 vs Día")
@@ -178,6 +178,13 @@ ggplot(pollution,aes(x = pm2.5, y =Is ))+geom_point()+ggtitle("PM2.5 vs Is")
 ggplot(pollution,aes(x = pm2.5, y =Ir ))+geom_point()+ggtitle("PM2.5 vs Ir")
 ```
 
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+corr_pol <- pollution[, -10]
+corr_pol <- corr_pol[,-1]
+cor(corr_pol)
+```
+
+Las variables que parecen tener mejor relación lineal con la variable objetivo (PM2.5) son DEWP e Isw ya que se nota una tendencia al graficarlas contra la variable que estamos estudiando. Las demás variables sí tienen relación lineal pero muy pequeña, se realizará la regresión lineal con todas las variables que se tienen para después empezar descartar las variables que menos relación tienen con la variable analizada; las variables que menos relación tienen y que son las candidatas a ser eliminadas de la regresión son: Año e IS.
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 out_year <- boxplot(pollution$year, plot=F)
@@ -197,7 +204,7 @@ out_Ir <- boxplot(pollution$Ir, plot=F)
 El número de outliers de cada variable son:
 
   + year: **`r length(out_year$out)`**
-  + month: **`r length(out_month$out)`**
+  + month: **`r length(out_month$out)`** 
   + day: **`r length(out_day$out)`**
   + hour: **`r length(out_hour$out)`**
   + DEWP: **`r length(out_DEWP$out)`**
@@ -207,3 +214,7 @@ El número de outliers de cada variable son:
   + Is: **`r length(out_Is$out)`**
   + Ir: **`r length(out_Ir$out)`**
 
+
+Después sacar la cantidad de datos atípicos de cada variable se puede ver que solo las variables Isw, Is e Ir los presentan. Se debe considerar eliminar los datos atípicos de Iws porque es una de las variables que mayor relación tiene con la variable que estamos analizando; los datos atípicos de las demás variables no son necesarios de eliminar porque son variables que no proporcionarán tanta información a la regresión lineal.
+
+***
