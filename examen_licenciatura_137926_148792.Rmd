@@ -122,6 +122,12 @@ Una investigación del Colegio del Medio Ambiente de la Universidad de Nanjing r
 
 Debido a los grandes problemas que ha causado la contaminación en China y la gran importancia en la salud que tiene, nosotros buscaremos analizar y predecir los niveles de contaminación en la ciudad de Beijing usando métodos de regresión. A lo largo de este trabajo estaremos trabajando con una base de datos que contiene información relacionada a la contaminación de Beijing del 1 de enero de 2010 al 31 de diciembre del 2014, y buscaremos ver que tan bien podemos predecir los niveles de contaminación del año 2014, a partir de los años 2010, 2011, 2012 y 2013.
 
+En la siguiente imagen podemos observar la calidad del aire segun el PM2.5:
+
+<div style="text-align:center" markdown="1">
+![Calidad del aire según PM2.5](calidad.png)
+</div>
+
 Nuestra base de datos contiene **`r dim(pollution_complete)[1]`** registros, sin embargo, haciendo un pequeño análisis, vemos que contiene **`r numero_NA`** registros con información faltante. Como nuestro modelo es de regresión nosotros eliminaremos esos registros, para solo trabajar con información consistente. Además, nuestra base de datos contiene las siguientes columnas:
 
 ```{r echo=TRUE, warning=FALSE, message=FALSE, error=FALSE}
@@ -139,7 +145,7 @@ Donde:
 + **TEMP:** Temperatura
 + ** PRES: ** Presión
 + **cbwd:** Dirección del aire combinada
-+ **lws:** Velocidad del aire acumulada
++ **iws:** Velocidad del aire acumulada
 + **Is:** Horas acumuladas de nieve
 + **Ir:** Horas acumuladas de lluvia
 
@@ -160,7 +166,7 @@ A continuacion analicemos las variables numericas:
 kable(df_numeric, format.args = list(big.mark=",", scientific=F))
 ```
 
-
+Es importante mencionar que la variable 'No' no da información importante respecto a lo que buscamos predecir, es por ello que no sera contemplada para el analisis de regresión. Al observar la variable año, podemos observar que hay un equilibrio en cuanto al numero de registros y el año, es decir que se tiene una cantidad bastante similar de registros de cada año. Cabe mencionar que la variable año, dia y mes serán variables bastante importantes en nuestro analisis ya que es muy factible que la fecha del año sea muy influente en cuanto a los niveles de contaminación. Es importante mencionar que las variables que también están muy relacionadas con la contaminación son la de temperatura, presión y el punto de rocio. Al observar que el promedio de PM2.5 es de 98, podemos confirmar quela calidad del aire de Beijing es mala, ya que lo pasable es no ser mayor a un PM2.5 de 50. 
 ***
 
 ###EDA
