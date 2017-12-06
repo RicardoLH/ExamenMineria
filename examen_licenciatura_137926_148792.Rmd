@@ -5,7 +5,7 @@ date: "12/6/2017"
 output: html_document
 ---
 
-```{r, echo=FALSE}
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 library(readr)
 library(ggplot2)
 library(stringr)
@@ -111,3 +111,47 @@ df_numeric <- cbind(uniques_num, uniqueness_num, nan_num, mins, maxs, means,
 names(df_numeric) <- str_replace_all(names(df_numeric), "_num", "")
 names(df_numeric)[2]<-"uniqueness"
 ```
+
+***
+
+##EDA
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+ggplot(pollution,aes(x = pm2.5, y =year ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =month ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =day ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =hour ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =DEWP ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =TEMP ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =PRES ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =Iws ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =Is ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =Ir ))+geom_point()
+```
+
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+out_year <- boxplot(pollution$year, plot=F)
+out_month <- boxplot(pollution$month, plot=F)
+out_day <- boxplot(pollution$day, plot=F)
+out_hour <- boxplot(pollution$hour, plot=F)
+out_DEWP <- boxplot(pollution$DEWP, plot=F)
+out_TEMP <- boxplot(pollution$TEMP, plot=F)
+out_PRES <- boxplot(pollution$PRES, plot=F)
+out_Iws <- boxplot(pollution$Iws, plot=F)
+out_Is <- boxplot(pollution$Is, plot=F)
+out_Ir <- boxplot(pollution$Ir, plot=F)
+```
+
+***
+    + year: `r length(out_year$out)`
+    + month:  `r length(out_month$out)`
+    + day:  `r length(out_day$out)`
+    + hour:  `r length(out_hour$out)`
+    + DEWP:  `r length(out_DEWP$out)`
+    + TEMP:  `r length(out_TEMP$out)`
+    + PRES:  `r length(out_PRES$out)`
+    + Iws:  `r length(out_Iws$out)`
+    + Is:  `r length(out_Is$out)`
+    + Ir:  `r length(out_Ir$out)`
+
