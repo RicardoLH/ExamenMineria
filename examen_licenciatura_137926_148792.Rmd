@@ -163,19 +163,19 @@ kable(df_numeric, format.args = list(big.mark=",", scientific=F))
 
 ***
 
-##EDA
+###EDA
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-ggplot(pollution,aes(x = pm2.5, y =year ))+geom_point()
-ggplot(pollution,aes(x = pm2.5, y =month ))+geom_point()
-ggplot(pollution,aes(x = pm2.5, y =day ))+geom_point()
-ggplot(pollution,aes(x = pm2.5, y =hour ))+geom_point()
-ggplot(pollution,aes(x = pm2.5, y =DEWP ))+geom_point()
-ggplot(pollution,aes(x = pm2.5, y =TEMP ))+geom_point()
-ggplot(pollution,aes(x = pm2.5, y =PRES ))+geom_point()
-ggplot(pollution,aes(x = pm2.5, y =Iws ))+geom_point()
-ggplot(pollution,aes(x = pm2.5, y =Is ))+geom_point()
-ggplot(pollution,aes(x = pm2.5, y =Ir ))+geom_point()
+ggplot(pollution,aes(x = pm2.5, y =year ))+geom_point()+ggtitle("PM2.5 vs Año")
+ggplot(pollution,aes(x = pm2.5, y =month ))+geom_point()+ggtitle("PM2.5 vs Mes")
+ggplot(pollution,aes(x = pm2.5, y =day ))+geom_point()+ggtitle("PM2.5 vs Día")
+ggplot(pollution,aes(x = pm2.5, y =hour ))+geom_point()+ggtitle("PM2.5 vs Hora")
+ggplot(pollution,aes(x = pm2.5, y =DEWP ))+geom_point()+ggtitle("PM2.5 vs DEWP")
+ggplot(pollution,aes(x = pm2.5, y =TEMP ))+geom_point()+ggtitle("PM2.5 vs TEMP")
+ggplot(pollution,aes(x = pm2.5, y =PRES ))+geom_point()+ggtitle("PM2.5 vs PRES")
+ggplot(pollution,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs Isw")
+ggplot(pollution,aes(x = pm2.5, y =Is ))+geom_point()+ggtitle("PM2.5 vs Is")
+ggplot(pollution,aes(x = pm2.5, y =Ir ))+geom_point()+ggtitle("PM2.5 vs Ir")
 ```
 
 
@@ -193,14 +193,17 @@ out_Ir <- boxplot(pollution$Ir, plot=F)
 ```
 
 
-    + year: `r length(out_year$out)`
-    + month:  `r length(out_month$out)`
-    + day:  `r length(out_day$out)`
-    + hour:  `r length(out_hour$out)`
-    + DEWP:  `r length(out_DEWP$out)`
-    + TEMP:  `r length(out_TEMP$out)`
-    + PRES:  `r length(out_PRES$out)`
-    + Iws:  `r length(out_Iws$out)`
-    + Is:  `r length(out_Is$out)`
-    + Ir:  `r length(out_Ir$out)`
+
+El número de outliers de cada variable son:
+
+  + year: **`r length(out_year$out)`**
+  + month: **`r length(out_month$out)`**
+  + day: **`r length(out_day$out)`**
+  + hour: **`r length(out_hour$out)`**
+  + DEWP: **`r length(out_DEWP$out)`**
+  + TEMP: **`r length(out_TEMP$out)`**
+  + PRES: **`r length(out_PRES$out)`**
+  + Iws: **`r length(out_Iws$out)`**
+  + Is: **`r length(out_Is$out)`**
+  + Ir: **`r length(out_Ir$out)`**
 
