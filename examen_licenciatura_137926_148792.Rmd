@@ -1,30 +1,113 @@
 ---
 title: "Examen_licenciatura_137926_148792"
-author: "Ricardo Lara Hernandez"
+author: "Alvaro Casillas y Ricardo Lara"
 date: "12/6/2017"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, echo=FALSE}
+library(readr)
+library(ggplot2)
+library(stringr)
+library(dplyr)
+library(knitr)
+library(tidyr) 
+set.seed(137926)
+pollution_complete <- read_csv("pollution.csv")
+row.has.na <- apply(pollution_complete, 1, function(x){any(is.na(x))})
+pollution <- pollution_complete[!row.has.na,]
+numero_NA <- dim(pollution_complete)[1] -dim(pollution)[1]
+totales<- dim(pollution)[1]
+
+#queremos saber que variables son categoricas y cuales numericas
+classes <- sapply(pollution, function(x) class(x))
+categoric_cols <- pollution[,which(classes %in% c("character", "factor"))]
+numeric_cols <- pollution[, -which(classes %in% c("character", "factor"))]
+
+#cuantos valores unicos --cardinalidad
+uniques_num <- sapply(numeric_cols, function(x) unique(x) %>% length())
+uniques_num <- as.data.frame(uniques_num)
+
+uniques_cat <- sapply(categoric_cols, function(x) unique(x) %>% length())
+uniques_cat <- as.data.frame(uniques_cat)
+
+#valores unicos
+uniques_values_num <- sapply(numeric_cols, function(x) unique(x))
+uniques_values_cat <- sapply(categoric_cols, function(x) unique(x))
+
+#proporcion valores unicos - uniqueness
+uniqueness_num <-  round(uniques_num/totales * 100, 2)
+uniqueness_num <- as.data.frame(uniqueness_num)
+
+uniqueness_cat <-  round(uniques_cat/totales * 100, 2)
+uniqueness_cat <- as.data.frame(uniqueness_cat)
+                                
+#checamos si hay vacios 
+nan_num <- sapply(numeric_cols, function(x) sum(is.na(x)))
+nan_num <- as.data.frame(nan_num)
+
+nan_cat <- sapply(categoric_cols, function(x) sum(is.na(x)))
+nan_cat <- as.data.frame(nan_cat)
+
+#para sacar la moda, redondeamos a 2 digitos
+my_mode <- function(x){
+  if (class(x) %in% c("character", "factor")) {
+    table(x) %>%
+      which.max() %>%
+      names()
+  }
+  else {
+    table(round(x, 2)) %>%
+      which.max() %>%
+      names()
+  }
+}
+
+
+#moda
+modes_num <- sapply(numeric_cols, function(x) my_mode(x))
+modes_num <- as.data.frame(modes_num)
+
+modes_cat <- sapply(categoric_cols, function(x) my_mode(x))
+modes_cat <- as.data.frame(modes_cat)
+
+
+#min 
+mins <- sapply(numeric_cols, function(x) min(x))
+mins <- as.data.frame(mins)
+
+#max
+maxs <- sapply(numeric_cols, function(x) max(x))
+maxs <- as.data.frame(maxs)
+
+#mean
+means <- sapply(numeric_cols, function(x) mean(x))
+means <- as.data.frame(means)
+
+#median
+medians <- sapply(numeric_cols, function(x) median(x))
+medians <- as.data.frame(medians)
+
+#1st quantile
+first_qtls <- sapply(numeric_cols, function(x) quantile(x)[2]) #revisa la funcion quantile!
+first_qtls <- as.data.frame(first_qtls)
+
+#3rd quantile
+third_qtls <- sapply(numeric_cols, function(x) quantile(x)[4]) 
+third_qtls <- as.data.frame(third_qtls)
+
+#sd
+sds <- sapply(numeric_cols, function(x) sd(x))
+sds <- as.data.frame(sds)
+
+###generamos nuestra tabla de data profiling
+df_categoric <- cbind(uniques_cat, uniqueness_cat, nan_cat, modes_cat)
+#no me gusta que tengan en la columna cat... 
+names(df_categoric) <- str_replace_all(names(df_categoric), "_cat", "")
+names(df_categoric)[2]<-"uniqueness"
+
+df_numeric <- cbind(uniques_num, uniqueness_num, nan_num, mins, maxs, means,
+                    sds, medians, modes_num, first_qtls, third_qtls) 
+names(df_numeric) <- str_replace_all(names(df_numeric), "_num", "")
+names(df_numeric)[2]<-"uniqueness"
 ```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
