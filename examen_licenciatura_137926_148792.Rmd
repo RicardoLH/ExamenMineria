@@ -173,16 +173,53 @@ Es importante mencionar que la variable 'No' no da información importante respe
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =year ))+geom_point()+ggtitle("PM2.5 vs Año")
+```
+
+En esta gráfica se puede notar que las observaciones de año vs PM2.5 no tienen mucha relación ya que se tienen todo tipo de muestras y no se puede ver que haya tendencia.
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =month ))+geom_point()+ggtitle("PM2.5 vs Mes")
+```
+
+Aquí se puede notar un que existe una mayor relación entre Mes y PM2.5 que entre la variable objetivo y el año pero aún así se ve que no es muy fuerte la relación de estos datos.
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =day ))+geom_point()+ggtitle("PM2.5 vs Día")
+```
+
+La variable de Día tampoco tiene una gran relación con la variable que estamos analizando, pero aún así aporta buena información para realizar la regresión lineal.
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =hour ))+geom_point()+ggtitle("PM2.5 vs Hora")
+```
+
+El caso de la variable Hora es el mismo que las anteriores y es que como son variables discretas pueden llegar a presentar baja relación con la variable objetivo porque esta es de tipo continua. Aún así sí se pueden considerar como variables útiles para la regresión.
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =DEWP ))+geom_point()+ggtitle("PM2.5 vs DEWP")
+```
+
+La variable DEWP tiene una relación con PM2.5 más alta que las anteriores y esto se puede ver porque entre más alto es el valor de PM2.5, los valores de DEWP se van acercando a un valor en específico cercano a -10 
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =TEMP ))+geom_point()+ggtitle("PM2.5 vs TEMP")
+```
+
+Se puede ver qe la Temperatura también tiene relación negativa con PM2.5 pero no es muy grande y es por eso que la línea que puede representar esta relación tiene una pendiente muy alta.
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =PRES ))+geom_point()+ggtitle("PM2.5 vs PRES")
+```
+
+La presión parece tener una baja relación con la variable que estamos estudiando pero se puede afirmar que esta relación es positiva. Es importante señalar que también es un poco difícil de ver esta relación debido a que la variable de presión es discreta.
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs Isw")
+```
+
+El caso de la relación de Isw con la variable PM2.5 es muy curioso porque se ve claramente que existe buena relación entre estas dos aunque no es de tipo lineal, pero también se puede ver muy fácil que si se hiciera una transformación de la variable Isw y se sacara nuevamente la gráfica se puede presentar una relación lineal muy fuerte.
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =Is ))+geom_point()+ggtitle("PM2.5 vs Is")
+```
+
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =Ir ))+geom_point()+ggtitle("PM2.5 vs Ir")
 ```
+
+Las variables Is e Ir presentan el mismo problema, la relación de cada una de ellas con PM2.5 es muy baja pero se podría incrementar si se descartan las observaciones de 0 en las dos variables y es que estas observaciones son las que hacen que presente baja relación.
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 corr_pol <- pollution[, -10]
@@ -222,5 +259,10 @@ El número de outliers de cada variable son:
 
 
 Después sacar la cantidad de datos atípicos de cada variable se puede ver que solo las variables Isw, Is e Ir los presentan. Se debe considerar eliminar los datos atípicos de Iws porque es una de las variables que mayor relación tiene con la variable que estamos analizando; los datos atípicos de las demás variables no son necesarios de eliminar porque son variables que no proporcionarán tanta información a la regresión lineal.
+
+***
+
+###Regresión Lineal
+
 
 ***
