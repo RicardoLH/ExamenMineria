@@ -189,12 +189,12 @@ Aquí se puede notar un que existe una mayor relación entre Mes y PM2.5 que ent
 ggplot(pollution,aes(x = pm2.5, y =day ))+geom_point()+ggtitle("PM2.5 vs Día")
 ```
 
-La variable de Día tampoco tiene una gran relación con la variable que estamos analizando, pero aún así aporta buena información para realizar la regresión lineal.
+La variable de Día tampoco tiene una gran relación con la variable que estamos analizando, pero aún así se ve que puede proporcionar información sobre pm2.5
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =hour ))+geom_point()+ggtitle("PM2.5 vs Hora")
 ```
 
-El caso de la variable Hora es el mismo que las anteriores y es que como son variables discretas pueden llegar a presentar baja relación con la variable objetivo porque esta es de tipo continua. Aún así sí se pueden considerar como variables útiles para la regresión.
+El caso de la variable Hora es el mismo que las anteriores y es que como son variables discretas pueden llegar a presentar baja relación con la variable objetivo porque esta es de tipo continua. 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =DEWP ))+geom_point()+ggtitle("PM2.5 vs DEWP")
 ```
@@ -204,7 +204,7 @@ La variable DEWP tiene una relación con PM2.5 más alta que las anteriores y es
 ggplot(pollution,aes(x = pm2.5, y =TEMP ))+geom_point()+ggtitle("PM2.5 vs TEMP")
 ```
 
-Se puede ver qe la Temperatura también tiene relación negativa con PM2.5 pero no es muy grande y es por eso que la línea que puede representar esta relación tiene una pendiente muy alta.
+Se puede ver que la Temperatura también tiene relación negativa con PM2.5 pero no es muy grande y es por eso que la línea que puede representar esta relación tiene una pendiente muy alta.
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =PRES ))+geom_point()+ggtitle("PM2.5 vs PRES")
 ```
@@ -214,7 +214,7 @@ La presión parece tener una baja relación con la variable que estamos estudian
 ggplot(pollution,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs Isw")
 ```
 
-El caso de la relación de Isw con la variable PM2.5 es muy curioso porque se ve claramente que existe buena relación entre estas dos aunque no es de tipo lineal, pero también se puede ver muy fácil que si se hiciera una transformación de la variable Isw y se sacara nuevamente la gráfica se puede presentar una relación lineal muy fuerte.
+El caso de la relación de Isw con la variable PM2.5 es muy curioso porque se ve claramente que existe buena relación entre estas dos aunque no es de tipo lineal, pero también se puede ver muy fácil que si se hiciera una transformación de la variable Isw y se sacara nuevamente la gráfica se puede presentar una mejor relación.
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =Is ))+geom_point()+ggtitle("PM2.5 vs Is")
 ```
