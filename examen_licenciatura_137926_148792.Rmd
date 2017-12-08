@@ -292,7 +292,7 @@ regresion <- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir +
 summary(regresion)
 ```
 
-Se puede notar que todas la variables proporcionan buena información al modelo de regresión, la única variable que proporciona menos información que las demás, es la variable de año.
+Se puede notar que todas la variables proporcionan buena información al modelo de regresión, pero a pesar de esto la R² de esta regresión lineal es muy baja y por esta razón se puede afirmar que esta regresión lineal no es un buen modelo de regresión porque las variables no explican gran parte de la varianza de la variable objetivo.
 
 ####Graficando los errores
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
@@ -313,6 +313,7 @@ ggplot(residuals_df, aes(x=fitted_values,
 ggplot(residuals_df, aes(x=residuals)) +   geom_histogram()
 ```
 
+Se puede ver que los errores no presentan una distribución normal, su distribución es más parecida a una chi-cuadrada pero esta no es la distribución que buscamos en los errores de una regresión lineal.
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 #produce una grafica con el QQ de una normal
 qqnorm(residuals_df$residuals, 
@@ -321,36 +322,37 @@ qqnorm(residuals_df$residuals,
 qqline(residuals_df$residuals)
 ```
 
+Con la gráfica Q-Q de una distribución normal se puede confirmar lo que el histograma mostraba, que los residuos no siguen una distribución normal y es por esto que la regresión lineal utilizada no puede considerarse como un buen modelo para lo que intentamos hacer.
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 regresion$coefficients
 ```
 
 
+
+####Transformación de variable Iws
+
+Como se vio al realizar el EDA de los datos, existe una variable que tiene gran relación con la variable que estamos analizando, pero el problema es que no es una relación lineal. Es por esta razón que se puede considerar como una alternativa el transformar esta variable para que la relación que presente con PM2.5 sea lineal y al momento de utilizarla en una regresión lineal se pueda incrementar el valor de R².
+La transformación que vamos a utilizar es sacar el logaritmo natural de Iws y ver si la relación con Pm2.5 ya es lineal:
+
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 
-library(readr)
-library(ggplot2)
-library(stringr)
-library(dplyr)
-library(knitr)
-library(tidyr) 
-library(class)
-iws <- pollution [, 11]
+iws <- pollution [, 10]
 for(i in 1:length(iws)){
   iws [i] <- log(iws[i])
 }
 
-pollution_transf <- pollution[,-11]
+pollution_transf <- pollution[,-10]
 pollution_transf <- cbind2(pollution_transf, iws)
-names(pollution_transf)[13]<- "Iws"
+names(pollution_transf)[12]<- "Iws"
 names(pollution_transf)
 
 ggplot(pollution_transf,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs Isw")
+```
 
+Después de realizar la tansformación de la variable se puede ver que la relación ya es lineal así que se realizará una nueva regresión pero ya no se utilizará la variable Iws normal, sino la variable que se obtuvo del logaritmo de Iws.
 
-
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 train_set_transf <-pollution_transf %>% filter( year >= 2010 & year <= 2013)
-
 train_set_reg_tra <- select(train_set_transf, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
 
 regresion_transf <- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg_tra)
@@ -377,6 +379,8 @@ ggplot(residuals_df, aes(x=fitted_values,
 ggplot(residuals_df, aes(x=residuals)) +   geom_histogram()
 ```
 
+Después de hacer la regresión se puede ver que, al igual que la primera regresión, los residuos obtenidos no cumplen con los supuesto que requiere una regresión lineal. Es decir, no tienen una distribución normal y al graficarlos paracen tener cierta tendencia. Por estas razones se puede decir que los residuos presentan heterocedasticidad.
+
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 #produce una grafica con el QQ de una normal
 qqnorm(residuals_df$residuals, 
@@ -385,6 +389,8 @@ qqnorm(residuals_df$residuals,
 qqline(residuals_df$residuals)
 ```
 
+
+Al igual que la primera regresión lineal que se realizó, los residuos no siguen una distribución normal y esto se puede ver claramente en la gráfica Q-Q.
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 regresion$coefficients
 ```
