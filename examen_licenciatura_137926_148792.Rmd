@@ -13,6 +13,9 @@ library(dplyr)
 library(knitr)
 library(tidyr) 
 library(class)
+library(rpart)
+library(lubridate)
+library(randomForest)
 set.seed(137926)
 pollution_complete <- read_csv("pollution.csv")
 row.has.na <- apply(pollution_complete, 1, function(x){any(is.na(x))})
@@ -264,7 +267,7 @@ Después sacar la cantidad de datos atípicos de cada variable se puede ver que 
 ***
 ## Desarrollo de los modelos
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-
+pollution$No <- NULL
 train_set <- pollution %>% filter( year >= 2010 & year <= 2013)
 test_set <- filter(pollution, pollution$year == 2014)
 
@@ -389,4 +392,67 @@ regresion$coefficients
 ***
 ###Arboles de regresión
 
-No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que puede que la regresión no cumpla ciertos supuestos. Debido a ello buscaremos hacer una regresión utilizando arboles.
+No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que el comportamiento del conjunto de datos puede ser no lineal. Debido a ello optaremos por usar regresión utilizando arboles, que como sabemos es una alternativa para modelos no lineales. A continuacion realizaremos nuestra regresión a partir de 5 observaciones por hoja:
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+reg_tree <- rpart(train_set$pm2.5 ~., data=train_set, 
+                  control=list(minsplit=5),
+                  method="anova")
+summary(reg_tree)
+rsq.rpart(reg_tree)
+pruned_tree <- prune(reg_tree, cp=0.010000)
+pruned_tree
+pruned_tree_predictions_val <- predict(pruned_tree, validation_set)
+
+residuals_pruned_tree_val <- validation_set$pm2.5 - pruned_tree_predictions_val
+df_2_val <- data.frame(fitted_values=pruned_tree_predictions_val,
+                 residuals=residuals_pruned_tree_val)
+
+
+ggplot(df_2_val, aes(x=fitted_values, y=residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color="red") +
+  theme_bw()
+MSE <- sum(residuals_pruned_tree_val^2)
+MSE
+y <- validation_set$pm2.5
+1 - sum((y-pruned_tree_predictions_val)^2)/sum((y-mean(y))^2)
+cor(pruned_tree_predictions_val, y)^2
+```
+
+
+###Random Forest
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+train_rf <-train_set
+train_rf$cbwd <- NULL
+rf_reg <- randomForest(pm2.5 ~., data=train_rf, 
+                       ntree=200,
+                       nodesize=7,
+                       importance=T)
+varImpPlot(rf_reg)
+```
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+fitted_values_rf1_val <- predict(rf_reg, 
+                         newdata=validation_set,
+                         type="response")
+
+residuals_rf1_val <- validation_set$pm2.5 - fitted_values_rf1_val
+
+
+df_rf1_performance_val <- data.frame(fitted_values=fitted_values_rf1_val,
+                                residuals=residuals_rf1_val)
+
+df_rf1_performance_val[which(is.na(df_rf1_performance_val$fitted_values)), 
+                  "fitted_values"] <- 0
+
+ggplot(df_rf1_performance_val, aes(x=fitted_values, y=residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color="red") +
+  theme_bw()
+MSE <- sum(residuals_rf1_val^2)
+MSE
+
+
+y <- validation_set$pm2.5
+1 - sum((y-fitted_values_rf1_val)^2)/sum((y-mean(y))^2)
+cor(fitted_values_rf1_val, y)^2
+```
