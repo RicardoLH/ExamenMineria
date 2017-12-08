@@ -116,7 +116,7 @@ names(df_numeric)[2]<-"uniqueness"
 ```
 
 
-### Introducción al problema
+## Introducción al problema
 
 
 Una investigación del Colegio del Medio Ambiente de la Universidad de Nanjing relacionó la contaminación con casi un tercio de todas las muertes que se producen en China, ubicando a la polución en el mismo nivel que fumar tabaco como amenaza para la salud pública. El estudio analiza casi 3 millones de muertes en 74 ciudades chinas durante 2013. Los hallazgos revelan que un 31,8% de todas las muertes registradas podrían estar relacionadas con la contaminación, con las grandes de ciudades de Hebei, la provincia que rodea a Beijing, clasificadas entre las peores.[Extraído de CNN](http://cnnespanol.cnn.com/2017/01/17/la-contaminacion-en-beijing-la-ciudad-donde-ricos-y-pobres-no-respiran-el-mismo-aire/).
@@ -151,7 +151,7 @@ Donde:
 + **Ir:** Horas acumuladas de lluvia
 
 ***
-### Data Profiling
+## Data Profiling
 
 Hagamos un analisis de las variables categóricas:
 
@@ -170,7 +170,7 @@ kable(df_numeric, format.args = list(big.mark=",", scientific=F))
 Es importante mencionar que la variable 'No' no da información importante respecto a lo que buscamos predecir, es por ello que no sera contemplada para el analisis de regresión. Al observar la variable año, podemos observar que hay un equilibrio en cuanto al numero de registros y el año, es decir que se tiene una cantidad bastante similar de registros de cada año. Cabe mencionar que la variable año, dia y mes serán variables bastante importantes en nuestro analisis ya que es muy factible que la fecha del año sea muy influente en cuanto a los niveles de contaminación. Es importante mencionar que las variables que también están muy relacionadas con la contaminación son la de temperatura, presión y el punto de rocio. Al observar que el promedio de PM2.5 es de 98, podemos confirmar quela calidad del aire de Beijing es mala, ya que lo pasable es no ser mayor a un PM2.5 de 50. 
 ***
 
-###EDA
+##EDA
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =year ))+geom_point()+ggtitle("PM2.5 vs Año")
@@ -261,12 +261,21 @@ El número de outliers de cada variable son:
 
 Después sacar la cantidad de datos atípicos de cada variable se puede ver que solo las variables Isw, Is e Ir los presentan. Se debe considerar eliminar los datos atípicos de Iws porque es una de las variables que mayor relación tiene con la variable que estamos analizando; los datos atípicos de las demás variables no son necesarios de eliminar porque son variables que no proporcionarán tanta información a la regresión lineal.
 
-
+***
+## Desarrollo de los modelos
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-train_set <-pollution %>% filter( year >= 2010 & year <= 2013)
+
+train_set <- pollution %>% filter( year >= 2010 & year <= 2013)
 test_set <- filter(pollution, pollution$year == 2014)
-validation_set <-  filter(pollution, pollution$year ==2013)
+
+validation_rows <- sample(dim(train_set %>% filter( year == 2013))[1], 
+                          size=round(dim(train_set)[1]*0.085,0),
+                          replace=F) + dim(train_set %>% filter( year <= 2012))[1]
+validation_set <- train_set[validation_rows,]
+train_set <- train_set[-validation_rows,]
 ```
+A lo largo de este trabajo estaremos trabajando con distintos conjuntos para entrenar, validar y probar los metodos que usaremos para la regresión. Por ello, el conjunto de entrenamiento serán  los registros que tienen fecha del 2010 al año 2013 y este contiene  **`r nrow(train_set)`** registros. Por el otro lado, nuestro conjunto de validación estara compuesto por el 8.5% de registros que nuestro conjunto de entrenamiento, sin embargo, este solamente estara compuesto por registros del año 2013; este contiene **`r nrow(validation_set)`** registros. Por ultimo, el set de pruebas consistira en los registros del año 2014 que justamente tiene un tamaño de **`r nrow(test_set)`**.
+
 
 ***
 
@@ -282,3 +291,6 @@ summary(regresion)
 
 
 ***
+###Arboles de regresión
+
+No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que puede que la regresión no cumpla ciertos supuestos. Debido a ello buscaremos hacer una regresión utilizando arboles.
