@@ -129,6 +129,7 @@ library(stringr)
 library(dplyr)
 library(knitr)
 library(tidyr) 
+library(class)
 set.seed(137926)
 pollution_complete &lt;- read_csv(&quot;pollution.csv&quot;)
 row.has.na &lt;- apply(pollution_complete, 1, function(x){any(is.na(x))})
@@ -547,10 +548,46 @@ out_Ir &lt;- boxplot(pollution$Ir, plot=F)</code></pre>
 <li>Ir: <strong>1739</strong></li>
 </ul>
 <p>Después sacar la cantidad de datos atípicos de cada variable se puede ver que solo las variables Isw, Is e Ir los presentan. Se debe considerar eliminar los datos atípicos de Iws porque es una de las variables que mayor relación tiene con la variable que estamos analizando; los datos atípicos de las demás variables no son necesarios de eliminar porque son variables que no proporcionarán tanta información a la regresión lineal.</p>
+<pre class="r"><code>train_set &lt;-pollution %&gt;% filter( year &gt;= 2010 &amp; year &lt;= 2013)
+test_set &lt;- filter(pollution, pollution$year == 2014)
+validation_set &lt;-  filter(pollution, pollution$year ==2013)</code></pre>
 <hr />
 </div>
 <div id="regresion-lineal" class="section level3">
 <h3>Regresión Lineal</h3>
+<pre class="r"><code>train_set_reg &lt;- select(train_set, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+validation_set_reg &lt;- select(validation_set, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+
+regresion &lt;- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg)
+summary(regresion)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = pm2.5 ~ year + month + day + hour + DEWP + TEMP + 
+##     PRES + Iws + Ir + Is, data = train_set_reg)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -169.91  -51.75  -15.09   33.84  888.89 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  3.518e+03  7.844e+02   4.485 7.32e-06 ***
+## year        -7.623e-01  3.868e-01  -1.971   0.0488 *  
+## month       -6.580e-01  1.320e-01  -4.984 6.27e-07 ***
+## day          6.783e-01  4.937e-02  13.740  &lt; 2e-16 ***
+## hour         1.606e+00  6.550e-02  24.518  &lt; 2e-16 ***
+## DEWP         4.806e+00  6.260e-02  76.776  &lt; 2e-16 ***
+## TEMP        -6.642e+00  7.914e-02 -83.935  &lt; 2e-16 ***
+## PRES        -1.801e+00  7.847e-02 -22.953  &lt; 2e-16 ***
+## Iws         -2.426e-01  9.119e-03 -26.601  &lt; 2e-16 ***
+## Ir          -7.213e+00  2.926e-01 -24.653  &lt; 2e-16 ***
+## Is          -2.318e+00  5.505e-01  -4.211 2.55e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 78.73 on 33081 degrees of freedom
+## Multiple R-squared:  0.2625, Adjusted R-squared:  0.2623 
+## F-statistic:  1178 on 10 and 33081 DF,  p-value: &lt; 2.2e-16</code></pre>
 <hr />
 </div>
 

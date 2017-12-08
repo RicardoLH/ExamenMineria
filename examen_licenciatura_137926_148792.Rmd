@@ -12,6 +12,7 @@ library(stringr)
 library(dplyr)
 library(knitr)
 library(tidyr) 
+library(class)
 set.seed(137926)
 pollution_complete <- read_csv("pollution.csv")
 row.has.na <- apply(pollution_complete, 1, function(x){any(is.na(x))})
@@ -260,9 +261,24 @@ El número de outliers de cada variable son:
 
 Después sacar la cantidad de datos atípicos de cada variable se puede ver que solo las variables Isw, Is e Ir los presentan. Se debe considerar eliminar los datos atípicos de Iws porque es una de las variables que mayor relación tiene con la variable que estamos analizando; los datos atípicos de las demás variables no son necesarios de eliminar porque son variables que no proporcionarán tanta información a la regresión lineal.
 
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+train_set <-pollution %>% filter( year >= 2010 & year <= 2013)
+test_set <- filter(pollution, pollution$year == 2014)
+validation_set <-  filter(pollution, pollution$year ==2013)
+```
+
 ***
 
 ###Regresión Lineal
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+train_set_reg <- select(train_set, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+validation_set_reg <- select(validation_set, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+
+regresion <- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg)
+summary(regresion)
+```
 
 
 ***
