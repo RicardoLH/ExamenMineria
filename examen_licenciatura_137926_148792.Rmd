@@ -289,6 +289,102 @@ regresion <- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir +
 summary(regresion)
 ```
 
+Se puede notar que todas la variables proporcionan buena información al modelo de regresión, la única variable que proporciona menos información que las demás, es la variable de año.
+
+####Graficando los errores
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+fitted_values <- regresion$fitted.values
+residuals <- regresion$residuals
+
+residuals_df <- data.frame(fitted_values=fitted_values,
+                           residuals=residuals)
+
+ggplot(residuals_df, aes(x=fitted_values,
+                         y=residuals)) +
+  geom_point() +
+  geom_hline(yintercept=0)
+```
+
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+ggplot(residuals_df, aes(x=residuals)) +   geom_histogram()
+```
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+#produce una grafica con el QQ de una normal
+qqnorm(residuals_df$residuals, 
+       ylab="Residuals", main="")
+#se agrega la linea de 
+qqline(residuals_df$residuals)
+```
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+regresion$coefficients
+```
+
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+library(readr)
+library(ggplot2)
+library(stringr)
+library(dplyr)
+library(knitr)
+library(tidyr) 
+library(class)
+iws <- pollution [, 11]
+for(i in 1:length(iws)){
+  iws [i] <- log(iws[i])
+}
+
+pollution_transf <- pollution[,-11]
+pollution_transf <- cbind2(pollution_transf, iws)
+names(pollution_transf)[13]<- "Iws"
+names(pollution_transf)
+
+ggplot(pollution_transf,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs Isw")
+
+
+
+train_set_transf <-pollution_transf %>% filter( year >= 2010 & year <= 2013)
+
+train_set_reg_tra <- select(train_set_transf, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+
+regresion_transf <- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg_tra)
+summary(regresion_transf)
+```
+
+
+####Graficando los errores
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+fitted_values <- regresion_transf$fitted.values
+residuals <- regresion_transf$residuals
+
+residuals_df <- data.frame(fitted_values=fitted_values,
+                           residuals=residuals)
+
+ggplot(residuals_df, aes(x=fitted_values,
+                         y=residuals)) +
+  geom_point() +
+  geom_hline(yintercept=0)
+```
+
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+ggplot(residuals_df, aes(x=residuals)) +   geom_histogram()
+```
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+#produce una grafica con el QQ de una normal
+qqnorm(residuals_df$residuals, 
+       ylab="Residuals", main="")
+#se agrega la linea de 
+qqline(residuals_df$residuals)
+```
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+regresion$coefficients
+```
 
 ***
 ###Arboles de regresión
