@@ -285,10 +285,10 @@ A lo largo de este trabajo estaremos trabajando con distintos conjuntos para ent
 ###Regresión Lineal
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-train_set_reg <- select(train_set, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
-validation_set_reg <- select(validation_set, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+train_set_reg <- select(train_set,  month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+validation_set_reg <- select(validation_set, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
 
-regresion <- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg)
+regresion <- lm(pm2.5 ~  month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg)
 summary(regresion)
 ```
 
@@ -344,18 +344,17 @@ for(i in 1:length(iws)){
 pollution_transf <- pollution[,-10]
 pollution_transf <- cbind2(pollution_transf, iws)
 names(pollution_transf)[12]<- "Iws"
-names(pollution_transf)
 
-ggplot(pollution_transf,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs Isw")
+ggplot(pollution_transf,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs ln(Isw)")
 ```
 
 Después de realizar la tansformación de la variable se puede ver que la relación ya es lineal así que se realizará una nueva regresión pero ya no se utilizará la variable Iws normal, sino la variable que se obtuvo del logaritmo de Iws.
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 train_set_transf <-pollution_transf %>% filter( year >= 2010 & year <= 2013)
-train_set_reg_tra <- select(train_set_transf, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+train_set_reg_tra <- select(train_set_transf, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
 
-regresion_transf <- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg_tra)
+regresion_transf <- lm(pm2.5 ~  month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg_tra)
 summary(regresion_transf)
 ```
 
