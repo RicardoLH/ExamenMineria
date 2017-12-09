@@ -392,17 +392,22 @@ regresion$coefficients
 ***
 ###Arboles de regresión
 
-No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que el comportamiento del conjunto de datos puede ser no lineal. Debido a ello optaremos por usar regresión utilizando arboles, que como sabemos es una alternativa para modelos no lineales. A continuacion realizaremos nuestra regresión a partir de 5 observaciones por hoja:
+No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que el comportamiento del conjunto de datos puede ser no lineal. Debido a ello optaremos por usar regresión utilizando arboles, que como sabemos es una alternativa para modelos no lineales. A continuacion realizaremos nuestra regresión a partir de un minimo de 5 observaciones por hoja; a continuación veamos graficas de R^2 y de los errores relativos de acuerdo al numero de splits del algoritmo
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 reg_tree <- rpart(train_set$pm2.5 ~., data=train_set, 
                   control=list(minsplit=5),
                   method="anova")
 summary(reg_tree)
 rsq.rpart(reg_tree)
-pruned_tree <- prune(reg_tree, cp=0.010000)
-pruned_tree
-pruned_tree_predictions_val <- predict(pruned_tree, validation_set)
 
+```
+
+Como podemos observar en las gráficas anteriores la regresión por este método no es demasiado buena, ya que por ejemplo, tenemos un valor de **R^2** bastante bajo de aproximadamente de alrededor de .3 y errores relativos bastante altos. A pesar de lo anterior, para proseguir con este método usaremos 7 splits y por tanto un CP de .014697. Lo anterior es debido a que vemos que apartir de 7 splits, el error relativo y el R^2 ya no cambian demasiado.
+
+A continuación lo que haremos será podar nuestro arbol de acuerdo al CP que escogimos, y aplicaremos la regresión sobre nuestro set de validación. Ahora veamos una grafica de los residuales:
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+pruned_tree <- prune(reg_tree, cp=.014697)
+pruned_tree_predictions_val <- predict(pruned_tree, validation_set)
 residuals_pruned_tree_val <- validation_set$pm2.5 - pruned_tree_predictions_val
 df_2_val <- data.frame(fitted_values=pruned_tree_predictions_val,
                  residuals=residuals_pruned_tree_val)
@@ -413,13 +418,11 @@ ggplot(df_2_val, aes(x=fitted_values, y=residuals)) +
   geom_hline(yintercept = 0, color="red") +
   theme_bw()
 MSE <- sum(residuals_pruned_tree_val^2)
-MSE
-y <- validation_set$pm2.5
-1 - sum((y-pruned_tree_predictions_val)^2)/sum((y-mean(y))^2)
-cor(pruned_tree_predictions_val, y)^2
+R2 <- 1 - sum((validation_set$pm2.5-pruned_tree_predictions_val)^2)/sum((validation_set$pm2.5-mean(validation_set$pm2.5))^2)
+
 ```
 
-
+Como podemos observar de la gráfica anterior tenemos residuales bastantes altos! Ya que vemos que hay una concentración.
 ###Random Forest
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 train_rf <-train_set
