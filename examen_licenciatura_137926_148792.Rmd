@@ -327,6 +327,16 @@ Con la gráfica Q-Q de una distribución normal se puede confirmar lo que el his
 regresion$coefficients
 ```
 
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+MSE_reg <- mean(regresion$residuals^2)
+MSE_reg
+MRSE_reg <- sqrt(MSE_reg)
+MRSE_reg
+#predict(regresion, validation_set_reg)
+#validation_set_reg$pm2.5
+
+```
+
 
 
 ####Transformación de variable Iws
@@ -391,7 +401,17 @@ qqline(residuals_df$residuals)
 
 Al igual que la primera regresión lineal que se realizó, los residuos no siguen una distribución normal y esto se puede ver claramente en la gráfica Q-Q.
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-regresion$coefficients
+regresion_transf$coefficients
+```
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+MSE_reg_t <- mean(regresion_transf$residuals^2)
+MSE_reg_t
+MRSE_reg_t <- sqrt(MSE_reg)
+MRSE_reg_t
+#predict(regresion, validation_set_reg)
+#validation_set_reg$pm2.5
+
 ```
 
 ***
@@ -456,8 +476,11 @@ ggplot(df_rf1_performance_val, aes(x=fitted_values, y=residuals)) +
   geom_point() +
   geom_hline(yintercept = 0, color="red") +
   theme_bw()
-MSE <- sum(residuals_rf1_val^2)
+MSE <- mean(residuals_rf1_val^2)
 MSE
+
+MRSE <- sqrt(MSE)
+MRSE
 
 
 y <- validation_set$pm2.5
