@@ -417,7 +417,7 @@ MRSE_reg_t
 ***
 ###Arboles de regresión
 
-No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que el comportamiento del conjunto de datos puede ser no lineal. Debido a ello optaremos por usar regresión utilizando arboles, que como sabemos es una alternativa para modelos no lineales. A continuacion realizaremos nuestra regresión a partir de un minimo de 5 observaciones por hoja; a continuación veamos graficas de R^2 y de los errores relativos de acuerdo al numero de splits del algoritmo
+No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que el comportamiento del conjunto de datos puede ser no lineal, como vimos en la sección anterior. Debido a ello optaremos por usar regresión utilizando arboles, que como sabemos es una alternativa para modelos no lineales. A continuacion realizaremos nuestra regresión a partir de un minimo de 5 observaciones por hoja; a continuación veamos graficas de R^2 y de los errores relativos de acuerdo al numero de splits del algoritmo:
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 reg_tree <- rpart(train_set$pm2.5 ~., data=train_set, 
                   control=list(minsplit=5),
@@ -427,9 +427,9 @@ rsq.rpart(reg_tree)
 
 ```
 
-Como podemos observar en las gráficas anteriores la regresión por este método no es demasiado buena, ya que por ejemplo, tenemos un valor de **R^2** bastante bajo de aproximadamente de alrededor de .3 y errores relativos bastante altos. A pesar de lo anterior, para proseguir con este método usaremos 7 splits y por tanto un CP de .014697. Lo anterior es debido a que vemos que apartir de 7 splits, el error relativo y el R^2 ya no cambian demasiado.
+Como podemos observar en las gráficas anteriores la regresión por este método no es demasiado buena, ya que con el set de entrenamiento tenemos un valor de R² bastante bajo de alrededor de .3 y errores relativos bastante altos superiores a .7. A pesar de lo anterior, buscaremos probar nuestro modelo con el set de entrenamiento con un numero de splits de 7 y por tanto un CP de .014697. Lo anterior es debido a que vemos que apartir de 7 splits, el error relativo y el R² ya no cambian demasiado.
 
-A continuación lo que haremos será podar nuestro arbol de acuerdo al CP que escogimos, y aplicaremos la regresión sobre nuestro set de validación. Ahora veamos una grafica de los residuales:
+Ahora veamos una grafica de los residuales sobre el set de validación:
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 pruned_tree <- prune(reg_tree, cp=.014697)
 pruned_tree_predictions_val <- predict(pruned_tree, validation_set)
@@ -447,8 +447,15 @@ R2 <- 1 - sum((validation_set$pm2.5-pruned_tree_predictions_val)^2)/sum((validat
 
 ```
 
-Como podemos observar de la gráfica anterior tenemos residuales bastantes altos! Ya que vemos que hay una concentración.
+Como podemos observar de la gráfica anterior tenemos residuales relativamente altos, ya que vemos que hay bastantes puntos sobrepasando un residuo de 200, además, hay un MSE de **`r MSE `** y un MSRE de **`r sqrt(MSE) `**. Lo anterior, junto con que hay un R² de **`r R2`** nos dice que este modelo no es muy bueno para predecir los niveles de PM2.5.
+
+Como hemos visto en esta sección, un arbol de regresión no es lo suficientemente bueno para lo que queremos ya que tiene un R² bastante bajo, sin embargo, en la siguiente sección buscaremos utilizar muchos arboles de regresión para hacer una regresión mucho mejor, es decir, que utilizaremos Random Forest para hacer una regresión.
+
+***
 ###Random Forest
+
+Debido a que vimos que el rendimiento de un solo arbol de regresión era algo bajo, buscaremos mejorar la regresión con una gran cantidad de arboles. Utilizando distintos parametros de numero de arboles (100, 200, y 300), hemos visto que 200 dan un muy buen rendimiento, ya que tampoco queremos hacer overfitting del modelo. 
+
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 train_rf <-train_set
 train_rf$cbwd <- NULL
@@ -458,6 +465,9 @@ rf_reg <- randomForest(pm2.5 ~., data=train_rf,
                        importance=T)
 varImpPlot(rf_reg)
 ```
+
+Con la grafica anterior podemos ver que las variables menos importancia tienen para este modelo son las variables de Ir e IS, y por el contrario la variable de temperatura de rocío es muy importante, asi como la variable que indica la velocidad del aire. Tambien, como notabamos en el Data Profiling y con el analisis exploratorio vemos que el dia y el mes tienen una importancia en el modelo. 
+
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 fitted_values_rf1_val <- predict(rf_reg, 
                          newdata=validation_set,
@@ -484,6 +494,10 @@ MRSE
 
 
 y <- validation_set$pm2.5
-1 - sum((y-fitted_values_rf1_val)^2)/sum((y-mean(y))^2)
-cor(fitted_values_rf1_val, y)^2
+R2 <- 1 - sum((y-fitted_values_rf1_val)^2)/sum((y-mean(y))^2)
+R2
 ```
+
+Como podemos ver en la grafica de los residuales, la mayoria de estos no exceden las 200 unidades, y al mismo tiempo, estan mayormente concentrados en residuos menores a 100 unidades, lo cual es una gran mejora respecto a la regresión lineal y a la regresión por un solo arbol. Asi mismo, podemos observar que este es el modelo que mejor rendimiento tiene ya que tenemos una R² bastante proxima a 1 de **`r R2`**, asi como un MSE de **`r MSE `** y un MSRE de **`r sqrt(MSE) `**. Debido a los motivos anteriores este será el modelo que utilizaremos para nuestro set de pruebas.
+
+## Mejor modelo en el set de pruebas
