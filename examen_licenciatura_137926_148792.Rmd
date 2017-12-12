@@ -139,19 +139,32 @@ colnames(pollution)
 ```
 
 Donde:
-+ **No:** Número de Registro
-+ **year:** Año en el que se hizo el registro
-+ **month:** Mes en el que se hizo el registro
-+ **day:** Día en el que se hizo el registro
-+ **hour:** Hora en el que se hizo el registro
-+ **pm2.5:** Concentración de PM2.5 
-+ **DEWP:** Punto de rocío
-+ **TEMP:** Temperatura
-+ ** PRES: ** Presión
-+ **cbwd:** Dirección del aire combinada
-+ **iws:** Velocidad del aire acumulada
-+ **Is:** Horas acumuladas de nieve
-+ **Ir:** Horas acumuladas de lluvia
+
+  + **No:** Número de Registro
+
+  + **year:** Año en el que se hizo el registro
+  
+  + **month:** Mes en el que se hizo el registro
+  
+  + **day:** Día en el que se hizo el registro
+  
+  + **hour:** Hora en el que se hizo el registro
+  
+  + **pm2.5:** Concentración de PM2.5 
+  
+  + **DEWP:** Punto de rocío
+  
+  + **TEMP:** Temperatura
+  
+  + **PRES:** Presión
+  
+  + **cbwd:** Dirección del aire combinada
+  
+  + **iws:** Velocidad del aire acumulada
+  
+  + **Is:** Horas acumuladas de nieve
+  
+  + **Ir:** Horas acumuladas de lluvia
 
 
 ***
@@ -353,7 +366,7 @@ A pesar de que ya vimos que no es un buen modelo, tratemos de predecir los valor
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 prediction <- predict(regresion, data.frame(validation_set))
-residuos <- prediction-validation_set$pm2.5
+residuos <- validation_set$pm2.5-prediction
 
 df_residual <- data.frame(fitted_values=prediction,
                  residuals=residuos)
@@ -405,7 +418,7 @@ Podemos observar que gracias a esta transformación obtenemos un aumento en R²,
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 prediction <- predict(regresion_transf, data.frame(validation_set_transform))
-residuos <- prediction-validation_set_transform$pm2.5
+residuos <- validation_set_transform$pm2.5 - prediction
 
 df_residual <- data.frame(fitted_values=prediction,
                  residuals=residuos)
@@ -559,4 +572,8 @@ Podemos observar que la mayoría de los residuales se encuentran alrededor del 0
 ## Conclusiones
 
 A lo largo de este trabajo pudimos observar que las variables descritas en el set de datos para nada tenían un comportamiento lineal respecto a la variable que indicaba los niveles de contaminación de Beijing. Es por ello que se recurrió a utilizar árboles para mejorar las predicciones, y definitivamente pudimos mejorarlas. 
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+sessionInfo()
+```
 
