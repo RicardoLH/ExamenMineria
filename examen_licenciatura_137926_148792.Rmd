@@ -1,6 +1,6 @@
 ---
 title: "Examen_licenciatura_137926_148792"
-author: "Alvaro Casillas y Ricardo Lara"
+author: "Álvaro Casillas y Ricardo Lara"
 date: "12/6/2017"
 output: html_document
 ---
@@ -16,6 +16,7 @@ library(class)
 library(rpart)
 library(lubridate)
 library(randomForest)
+library(dummies)
 set.seed(137926)
 pollution_complete <- read_csv("pollution.csv")
 row.has.na <- apply(pollution_complete, 1, function(x){any(is.na(x))})
@@ -121,10 +122,9 @@ names(df_numeric)[2]<-"uniqueness"
 
 ## Introducción al problema
 
-
 Una investigación del Colegio del Medio Ambiente de la Universidad de Nanjing relacionó la contaminación con casi un tercio de todas las muertes que se producen en China, ubicando a la polución en el mismo nivel que fumar tabaco como amenaza para la salud pública. El estudio analiza casi 3 millones de muertes en 74 ciudades chinas durante 2013. Los hallazgos revelan que un 31,8% de todas las muertes registradas podrían estar relacionadas con la contaminación, con las grandes de ciudades de Hebei, la provincia que rodea a Beijing, clasificadas entre las peores.[Extraído de CNN](http://cnnespanol.cnn.com/2017/01/17/la-contaminacion-en-beijing-la-ciudad-donde-ricos-y-pobres-no-respiran-el-mismo-aire/).
 
-Debido a los grandes problemas que ha causado la contaminación en China y la gran importancia en la salud que tiene, nosotros buscaremos analizar y predecir los niveles de contaminación en la ciudad de Beijing usando métodos de regresión. A lo largo de este trabajo estaremos trabajando con una base de datos que contiene información relacionada a la contaminación de Beijing del 1 de enero de 2010 al 31 de diciembre del 2014, y buscaremos ver que tan bien podemos predecir los niveles de contaminación del año 2014, a partir de los años 2010, 2011, 2012 y 2013.
+Debido a los grandes problemas que ha causado la contaminación en China y la gran importancia en la salud que tiene, nosotros buscaremos analizar y predecir los niveles de contaminación en la ciudad de Beijing usando métodos de regresión. A lo largo de este trabajo estaremos trabajando con una base de datos que contiene información relacionada a la contaminación de Beijing del 1 de enero de 2010 al 31 de diciembre del 2014, y buscaremos ver que tan bien podemos predecir los niveles de contaminación del año 2014, a partir de los años 2010, 2011, 2012 y 2013 utilizando el método de regresión.
 
 En la siguiente imagen podemos observar la calidad del aire segun el PM2.5:
 
@@ -132,7 +132,7 @@ En la siguiente imagen podemos observar la calidad del aire segun el PM2.5:
 ![Calidad del aire según PM2.5](calidad.png)
 </div>
 
-Nuestra base de datos contiene **`r dim(pollution_complete)[1]`** registros, sin embargo, haciendo un pequeño análisis, vemos que contiene **`r numero_NA`** registros con información faltante. Como nuestro modelo es de regresión nosotros eliminaremos esos registros, para solo trabajar con información consistente. Además, nuestra base de datos contiene las siguientes columnas:
+Nuestra base de datos contiene **`r dim(pollution_complete)[1]`** registros, sin embargo, haciendo un pequeño análisis, vemos que contiene **`r numero_NA`** registros con información faltante. Como nuestro modelo es de regresión nosotros eliminaremos esos registros, quedándonos al final con **`r dim(pollution)[1]`** registros con información consistente. Además, nuestra base de datos contiene las siguientes columnas:
 
 ```{r echo=TRUE, warning=FALSE, message=FALSE, error=FALSE}
 colnames(pollution)
@@ -153,85 +153,94 @@ Donde:
 + **Is:** Horas acumuladas de nieve
 + **Ir:** Horas acumuladas de lluvia
 
+
 ***
+
 ## Data Profiling
 
-Hagamos un analisis de las variables categóricas:
+Hagamos un análisis de las variables categóricas:
 
 ```{r echo=T, warning=F, error=F, message=F}
 kable(df_categoric, format.args = list(big.mark=",", scientific=F))
 ```
-La única variable categórica que tenemos es 'cbwd' que nos muestra practicamente la dirección del aire. Sin embargo no nos proporciona mucha información relevante, más que la dirección del viento mas predominante es 'SouthEast'
 
-A continuacion analicemos las variables numericas:
+La única variable categórica que tenemos es 'cbwd' que nos muestra prácticamente la dirección del aire. Sin embargo no nos proporciona mucha información relevante, más que la dirección del viento más predominante es 'SouthEast'
+
+A continuación analicemos las variables numéricas:
 
 
 ```{r echo=T, warning=F, error=F, message=F}
 kable(df_numeric, format.args = list(big.mark=",", scientific=F))
 ```
 
-Es importante mencionar que la variable 'No' no da información importante respecto a lo que buscamos predecir, es por ello que no sera contemplada para el analisis de regresión. Al observar la variable año, podemos observar que hay un equilibrio en cuanto al numero de registros y el año, es decir que se tiene una cantidad bastante similar de registros de cada año. Cabe mencionar que la variable año, dia y mes serán variables bastante importantes en nuestro analisis ya que es muy factible que la fecha del año sea muy influente en cuanto a los niveles de contaminación. Es importante mencionar que las variables que también están muy relacionadas con la contaminación son la de temperatura, presión y el punto de rocio. Al observar que el promedio de PM2.5 es de 98, podemos confirmar quela calidad del aire de Beijing es mala, ya que lo pasable es no ser mayor a un PM2.5 de 50. 
-***
+Es importante mencionar que la variable 'No' no da información importante respecto a lo que buscamos predecir, es por ello que no será contemplada para el análisis de regresión. Al observar la variable año, podemos observar que hay un equilibrio en cuanto al número de registros y el año, es decir que se tiene una cantidad bastante similar de registros de cada año. Cabe mencionar que la variable año, día y mes serán variables bastante importantes en nuestro análisis ya que es muy factible que la fecha del año sea muy influente en cuanto a los niveles de contaminación. Es importante mencionar que las variables que también están muy relacionadas con la contaminación son la de temperatura, presión y el punto de rocío. Al observar que el promedio de PM2.5 es de 98, podemos confirmar que la calidad del aire de Beijing es mala, ya que lo pasable es no ser mayor a un PM2.5 de 50. 
 
+***
 ##EDA
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =year ))+geom_point()+ggtitle("PM2.5 vs Año")
 ```
 
-En esta gráfica se puede notar que las observaciones de año vs PM2.5 no tienen mucha relación ya que se tienen todo tipo de muestras y no se puede ver que haya tendencia.
+En esta gráfica se puede notar que las observaciones de año vs PM2.5 no tienen demasiada relación ya que se tienen todo tipo de muestras y por lo tanto no hay una tendencia obvia.
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =month ))+geom_point()+ggtitle("PM2.5 vs Mes")
 ```
 
-Aquí se puede notar un que existe una mayor relación entre Mes y PM2.5 que entre la variable objetivo y el año pero aún así se ve que no es muy fuerte la relación de estos datos.
+En la gráfica anterior podemos notar que existe una mayor relación entre Mes y PM2.5 que en la gráfica anterior. De hecho podemos observar que en los primeros meses del año los niveles de contaminación son mayores, y en cambio, a mitad del año tenemos bajos niveles de contaminación. Esta relación Mes-PM2.5 puede que sea de gran interés en el modelo que estaremos analizando posteriormente.
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =day ))+geom_point()+ggtitle("PM2.5 vs Día")
 ```
 
-La variable de Día tampoco tiene una gran relación con la variable que estamos analizando, pero aún así se ve que puede proporcionar información sobre pm2.5
+La variable Día no tiene una relación muy obvia respecto a los niveles de PM2.5 en Beijing. Sin embargo, podemos ver que a mitad del mes tenemos un concentraciones más altas de PM2.5. Esta variable puede que sea de interés en los modelos que analizaremos.
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =hour ))+geom_point()+ggtitle("PM2.5 vs Hora")
 ```
 
-El caso de la variable Hora es el mismo que las anteriores y es que como son variables discretas pueden llegar a presentar baja relación con la variable objetivo porque esta es de tipo continua. 
+En el caso de la variable hora tampoco hay una relación obvia con respecto a los niveles de PM2.5. Puede que esta variable presente baja relación con la variable objetivo.
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =DEWP ))+geom_point()+ggtitle("PM2.5 vs DEWP")
 ```
 
-La variable DEWP tiene una relación con PM2.5 más alta que las anteriores y esto se puede ver porque entre más alto es el valor de PM2.5, los valores de DEWP se van acercando a un valor en específico cercano a -10 
+La variable DEWP, que representa a la temperatura de roció, tiene una relación  más visible con los niveles de PM2.5 que las variables anteriores. Lo anterior lo podemos ver que mientras más altos son los niveles de PM2.5, los valores de la temperatura se van acercando más a un valor especifico.
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =TEMP ))+geom_point()+ggtitle("PM2.5 vs TEMP")
 ```
 
-Se puede ver que la Temperatura también tiene relación negativa con PM2.5 pero no es muy grande y es por eso que la línea que puede representar esta relación tiene una pendiente muy alta.
+Se puede ver que la Temperatura del ambiente y los niveles de PM2.5 podrían tener alguna especie de relación inversa. Ya que podemos observar que mientras más baja sea la temperatura comienza a crecer los niveles de PM2.5. Será cuestión de checar posteriormente si realmente esta variable está relacionada con la variable objetivo.
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =PRES ))+geom_point()+ggtitle("PM2.5 vs PRES")
 ```
 
-La presión parece tener una baja relación con la variable que estamos estudiando pero se puede afirmar que esta relación es positiva. Es importante señalar que también es un poco difícil de ver esta relación debido a que la variable de presión es discreta.
+La presión parece tener una baja relación con la variable que estamos estudiando pero se puede afirmar que esta relación es positiva, y que en niveles intermedios de presión, tenemos más concentración de altos niveles de PM2.5. Es importante señalar que también es un poco difícil de ver esta relación debido a que la variable de presión es discreta en nuestra base de datos.
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs Isw")
 ```
 
-El caso de la relación de Isw con la variable PM2.5 es muy curioso porque se ve claramente que existe buena relación entre estas dos aunque no es de tipo lineal, pero también se puede ver muy fácil que si se hiciera una transformación de la variable Isw y se sacara nuevamente la gráfica se puede presentar una mejor relación.
+Al observar la variable Isw (velocidad del aire) con la variable PM2.5, vemos que es muy probable que estás variables estén relacionadas, definitivamente no es una relación lineal, pero puede que se tenga un comportamiento logarítmico.
 
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =Is ))+geom_point()+ggtitle("PM2.5 vs Is")
 ```
 
+Al ser 'Is' una variable discreta, es difícil determinar si hay una relación entre estas dos. Sin embargo, vemos que mientras más elevados sean los niveles de Is, vemos que hay bajos niveles de PM2.5.
+
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =Ir ))+geom_point()+ggtitle("PM2.5 vs Ir")
 ```
 
-Las variables Is e Ir presentan el mismo problema, la relación de cada una de ellas con PM2.5 es muy baja pero se podría incrementar si se descartan las observaciones de 0 en las dos variables y es que estas observaciones son las que hacen que presente baja relación.
+Las variables Is e Ir presentan el mismo problema, la relación de cada una de ellas con PM2.5 es muy baja pero se podría incrementar si se descartan las observaciones de 0 en las dos variables y es que estas observaciones puede que sean los motivos por los que haya una baja relación.
+
+### Matriz de Correlación
+
+A continuación mostraremos la matriz de correlación entre las distintas variables, de tal forma que podamos observar de mejor manera si existe una relación o no con la variable objetivo.
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 corr_pol <- pollution[, -10]
@@ -239,7 +248,9 @@ corr_pol <- corr_pol[,-1]
 cor(corr_pol)
 ```
 
-Las variables que parecen tener mejor relación lineal con la variable objetivo (PM2.5) son DEWP e Isw ya que se nota una tendencia al graficarlas contra la variable que estamos estudiando. Las demás variables sí tienen relación lineal pero muy pequeña, se realizará la regresión lineal con todas las variables que se tienen para después empezar descartar las variables que menos relación tienen con la variable analizada; las variables que menos relación tienen y que son las candidatas a ser eliminadas de la regresión son: Año e IS.
+Al observar los coeficientes de correlación de nuestra variable objetivo (PM2.5) con las demás variables, vemos que estos están muy cercanos al valor 0, lo cual indica que probablemente no hay una relación lineal con la variable que queremos predecir. Debido a ello, estaremos buscando utilizar regresiones tanto lineales como no lineales para predecir los niveles de PM2.5.
+
+### Datos Atípicos
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 out_year <- boxplot(pollution$year, plot=F)
@@ -254,8 +265,6 @@ out_Is <- boxplot(pollution$Is, plot=F)
 out_Ir <- boxplot(pollution$Ir, plot=F)
 ```
 
-
-
 El número de outliers de cada variable son:
 
   + year: **`r length(out_year$out)`**
@@ -269,60 +278,67 @@ El número de outliers de cada variable son:
   + Is: **`r length(out_Is$out)`**
   + Ir: **`r length(out_Ir$out)`**
 
-
-Después sacar la cantidad de datos atípicos de cada variable se puede ver que solo las variables Isw, Is e Ir los presentan. Se debe considerar eliminar los datos atípicos de Iws porque es una de las variables que mayor relación tiene con la variable que estamos analizando; los datos atípicos de las demás variables no son necesarios de eliminar porque son variables que no proporcionarán tanta información a la regresión lineal.
+Después sacar la cantidad de datos atípicos de cada variable se puede ver que solo las variables Iws, Is e Ir los presentan. Consideramos que los datos atípicos de la variable 'Iws' podrían ser eliminados, ya que en la gráfica vimos que hay una relación bastante obvia con la variable que queremos predecir, y al eliminarlos puede que mejoremos nuestros modelos de predicción. Sin embargo, los datos atípicos de Is e Ir consideramos que son importantes para el modelo y que por ello no deben ser eliminadas, ya que las horas acumuladas de lluvia o nieve pueden ser un factor importante en la contaminación. 
 
 ***
 ## Desarrollo de los modelos
+
+
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 pollution$No <- NULL
+pollution <- cbind(pollution, dummy(pollution$cbwd, sep = "_"))
+pollution$cbwd <- NULL
+colnames(pollution) <- c("year", "month","day","hour","pm2.5","DEWP","TEMP","PRES","Iws", "Is","Ir","cbwd_cv","cbwd_NE","cbwd_NW","cbwd_SE")
+
 train_set <- pollution %>% filter( year >= 2010 & year <= 2013)
 test_set <- filter(pollution, pollution$year == 2014)
-
-validation_rows <- sample(dim(train_set %>% filter( year == 2013))[1], 
+validation_rows <- sample(dim(train_set %>% filter(year == 2013))[1], 
                           size=round(dim(train_set)[1]*0.085,0),
                           replace=F) + dim(train_set %>% filter( year <= 2012))[1]
 validation_set <- train_set[validation_rows,]
 train_set <- train_set[-validation_rows,]
+validation_set$year <- NULL
+train_set$year <- NULL
+test_set$year <- NULL
 ```
-A lo largo de este trabajo estaremos trabajando con distintos conjuntos para entrenar, validar y probar los metodos que usaremos para la regresión. Por ello, el conjunto de entrenamiento serán  los registros que tienen fecha del 2010 al año 2013 y este contiene  **`r nrow(train_set)`** registros. Por el otro lado, nuestro conjunto de validación estara compuesto por el 8.5% de registros que nuestro conjunto de entrenamiento, sin embargo, este solamente estara compuesto por registros del año 2013; este contiene **`r nrow(validation_set)`** registros. Por ultimo, el set de pruebas consistira en los registros del año 2014 que justamente tiene un tamaño de **`r nrow(test_set)`**.
 
+A lo largo de este trabajo estaremos trabajando con distintos conjuntos para entrenar, validar y probar los métodos que usaremos para la regresión. Por ello, el conjunto de entrenamiento serán  los registros que tienen fecha del 2010 al año 2013 y este contiene  **`r nrow(train_set)`** registros. Por el otro lado, nuestro conjunto de validación estará compuesto por el 8.5% de registros que nuestro conjunto de entrenamiento, sin embargo, este solamente estará compuesto por registros del año 2013; este contiene **`r nrow(validation_set)`** registros. Por último, el set de pruebas consistirá en los registros del año 2014 que justamente tiene un tamaño de **`r nrow(test_set)`**. Como estamos separando nuestros conjuntos por el año, asumimos de alguna forma que el año no afecta los niveles de contaminación, por ello, eliminaremos esa columna de nuestro set de datos una vez que los conjuntos están separados por año. Sin embargo, debemos tener siempre presente lo mencionado con anterioridad. 
+
+Así mismo, la columna categórica **cbwd** que representa la dirección del aire combinada, será utilizada como una columna Dummie.
 
 ***
 
 ###Regresión Lineal
 
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-train_set_reg <- select(train_set,  month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
-validation_set_reg <- select(validation_set, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+A continuación empezaremos por hacer una regresión lineal en nuestro conjunto de datos:
 
-regresion <- lm(pm2.5 ~  month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg)
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+regresion <- lm(pm2.5 ~.,  data=data.frame(train_set))
 summary(regresion)
 ```
 
-Se puede notar que todas la variables proporcionan buena información al modelo de regresión, pero a pesar de esto la R² de esta regresión lineal es muy baja y por esta razón se puede afirmar que esta regresión lineal no es un buen modelo de regresión porque las variables no explican gran parte de la varianza de la variable objetivo.
+En un inicio, intentamos eliminar las variables relacionados con la dirección del aire (cbwd), sin embargo, obtuvimos un peor rendimiento del modelo, primero por que los residuales se alejaban un poco del cero, además de que la R² disminuía. Al tener como coeficiente estimado NA en la variable cbwd_SE podemos afirmar que esa variable tiene una relación completamente lineal con las otras columnas. Podemos notar que la mayoría de las variables proporcionan buena información al modelo de regresión, pero a pesar de esto, la R² de esta regresión lineal es muy baja, ya que es de aproximadamente .279 y por esta razón se puede afirmar que esta regresión lineal no es un buen modelo de regresión porque las variables no explican gran parte de la varianza de la variable objetivo. Lo anterior es es justo lo que observábamos en la matriz de correlación.
 
-####Graficando los errores
+A continuación grafiquemos los residuales del modelo:
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 fitted_values <- regresion$fitted.values
-fitted_values
 residuals <- regresion$residuals
-
 residuals_df <- data.frame(fitted_values=fitted_values,
                            residuals=residuals)
-
 ggplot(residuals_df, aes(x=fitted_values,
                          y=residuals)) +
   geom_point() +
   geom_hline(yintercept=0)
 ```
 
+Al observar la gráfica anterior fácilmente podemos ver que los residuales no tienen una varianza constante, que es justo un requisito para que una regresión lineal sea buena. De hecho, no siguen una distribución normal como observamos en el siguiente histograma:
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(residuals_df, aes(x=residuals)) +   geom_histogram()
 ```
 
-Se puede ver que los errores no presentan una distribución normal, su distribución es más parecida a una chi-cuadrada pero esta no es la distribución que buscamos en los errores de una regresión lineal.
+Su distribución es más parecida a una chi-cuadrada pero esta no es la distribución que buscamos en los errores de una regresión lineal. Lo podemos visualizar más fácil con el QQ-Plot:
+
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 #produce una grafica con el QQ de una normal
 qqnorm(residuals_df$residuals, 
@@ -331,123 +347,97 @@ qqnorm(residuals_df$residuals,
 qqline(residuals_df$residuals)
 ```
 
-Con la gráfica Q-Q de una distribución normal se puede confirmar lo que el histograma mostraba, que los residuos no siguen una distribución normal y es por esto que la regresión lineal utilizada no puede considerarse como un buen modelo para lo que intentamos hacer.
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-regresion$coefficients
-```
+Con esto se puede confirmar lo que el histograma mostraba, que los residuos no siguen una distribución normal y es por esto que la regresión lineal utilizada no puede considerarse como un buen modelo para lo que intentamos hacer.
+
+A pesar de que ya vimos que no es un buen modelo, tratemos de predecir los valores de PM2.5 del set de validación:
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-MSE_reg <- mean(regresion$residuals^2)
-MSE_reg
-MRSE_reg <- sqrt(MSE_reg)
-MRSE_reg
-predi <- predict(regresion, validation_set_reg)
-residuos <- predi-validation_set_reg$pm2.5
-plot(residuos)
+prediction <- predict(regresion, data.frame(validation_set))
+residuos <- prediction-validation_set$pm2.5
+
+df_residual <- data.frame(fitted_values=prediction,
+                 residuals=residuos)
 
 
-ggplot(x=residuos) +   geom_histogram()
+ggplot(df_residual, aes(x=fitted_values, y=residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color="red") +
+  theme_bw()
 
-qqnorm(residuos, 
+ggplot(df_residual, aes(x=residuals)) +   geom_histogram()
+
+MSE <- mean(residuos^2)
+MRSE <- sqrt(MSE)
+y <- validation_set$pm2.5
+R2 <- 1 - sum((y-prediction)^2)/sum((y-mean(y))^2)
+
+qqnorm(df_residual$residuals, 
        ylab="Residuals", main="")
 #se agrega la linea de 
-qqline(residuos)
+qqline(df_residual$residuals)
+
 ```
 
-
+Como vimos en el set de entrenamiento, se ve claramente que los errores no tienen una distribución normal. Así mismo en el set de validación tenemos una R² de **`r R2`** que es muy baja, así como un MSE de **`r MSE `** y un MSRE de **`r sqrt(MSE) `**.
 
 ####Transformación de variable Iws
 
-Como se vio al realizar el EDA de los datos, existe una variable que tiene gran relación con la variable que estamos analizando, pero el problema es que no es una relación lineal. Es por esta razón que se puede considerar como una alternativa el transformar esta variable para que la relación que presente con PM2.5 sea lineal y al momento de utilizarla en una regresión lineal se pueda incrementar el valor de R².
+Como se vio al realizar el EDA de los datos, existe una variable que tiene gran relación con la variable que estamos analizando, pero el problema es que no es una relación lineal, estamos hablando de la variable Iws, que representa la dirección del aire. Es por esta razón que se puede considerar como una alternativa el transformar esta variable para que la relación que presente con PM2.5 sea lineal y al momento de utilizarla en una regresión lineal se pueda incrementar el valor de R².
+
 La transformación que vamos a utilizar es sacar el logaritmo natural de Iws y ver si la relación con Pm2.5 ya es lineal:
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-
-iws <- pollution [, 10]
-for(i in 1:length(iws)){
-  iws [i] <- log(iws[i])
-}
-
-pollution_transf <- pollution[,-10]
-pollution_transf <- cbind2(pollution_transf, iws)
-names(pollution_transf)[12]<- "Iws"
-
-ggplot(pollution_transf,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs ln(Isw)")
+train_set_transform <- data.frame(train_set)
+validation_set_transform <- data.frame(validation_set)
+train_set_transform$Iws <- log(train_set_transform$Iws)
+validation_set_transform$Iws <- log(validation_set_transform$Iws)
+ggplot(train_set_transform,aes(x = pm2.5, y=Iws ))+geom_point()+ggtitle("PM2.5 vs ln(Isw)")
 ```
 
-Después de realizar la tansformación de la variable se puede ver que la relación ya es lineal así que se realizará una nueva regresión pero ya no se utilizará la variable Iws normal, sino la variable que se obtuvo del logaritmo de Iws.
+Después de realizar la tansformación de la variable se puede ver que la relación ya tiene mas pinta de que es lineal, por lo cual  se realizará una nueva regresión pero ya no se utilizará la variable Iws normal, sino la variable que se obtuvo del logaritmo de Iws.
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-train_set_transf <-pollution_transf %>% filter( year >= 2010 & year <= 2013)
-validation_set_transf <- train_set[validation_rows,]
-train_set_transf <- train_set[-validation_rows,]
-train_set_reg_tra <- select(train_set_transf, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
-
-regresion_transf <- lm(pm2.5 ~  month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg_tra)
+regresion_transf <- lm(pm2.5 ~.,  data=data.frame(train_set_transform))
 summary(regresion_transf)
 ```
 
+Podemos observar que gracias a esta transformación obtenemos un aumento en R², lo cual es bueno. Sin embargo, no es lo suficientemente alto como para decir que es un buen modelo. Lo anterior lo podemos observar en las predicciones en el set de validación:
 
-####Graficando los errores
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-fitted_values <- regresion_transf$fitted.values
-residuals <- regresion_transf$residuals
+prediction <- predict(regresion_transf, data.frame(validation_set_transform))
+residuos <- prediction-validation_set_transform$pm2.5
 
-residuals_df <- data.frame(fitted_values=fitted_values,
-                           residuals=residuals)
+df_residual <- data.frame(fitted_values=prediction,
+                 residuals=residuos)
 
-ggplot(residuals_df, aes(x=fitted_values,
-                         y=residuals)) +
+
+ggplot(df_residual, aes(x=fitted_values, y=residuals)) +
   geom_point() +
-  geom_hline(yintercept=0)
-```
+  geom_hline(yintercept = 0, color="red") +
+  theme_bw()
 
+ggplot(df_residual, aes(x=residuals)) +   geom_histogram()
 
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-ggplot(residuals_df, aes(x=residuals)) +   geom_histogram()
-```
+MSE <- mean(residuos^2)
+MRSE <- sqrt(MSE)
+y <- validation_set$pm2.5
+R2 <- 1 - sum((y-prediction)^2)/sum((y-mean(y))^2)
 
-Después de hacer la regresión se puede ver que, al igual que la primera regresión, los residuos obtenidos no cumplen con los supuesto que requiere una regresión lineal. Es decir, no tienen una distribución normal y al graficarlos paracen tener cierta tendencia. Por estas razones se puede decir que los residuos presentan heterocedasticidad.
-
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-#produce una grafica con el QQ de una normal
-qqnorm(residuals_df$residuals, 
+qqnorm(df_residual$residuals, 
        ylab="Residuals", main="")
 #se agrega la linea de 
-qqline(residuals_df$residuals)
+qqline(df_residual$residuals)
 ```
 
-
-Al igual que la primera regresión lineal que se realizó, los residuos no siguen una distribución normal y esto se puede ver claramente en la gráfica Q-Q.
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-regresion_transf$coefficients
-```
-
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-MSE_reg_t <- mean(regresion_transf$residuals^2)
-MSE_reg_t
-MRSE_reg_t <- sqrt(MSE_reg)
-MRSE_reg_t
-predi_tra <- predict(regresion_transf, validation_set_reg)
-residuos_tra <- predi_tra-validation_set_reg$pm2.5
-plot(residuos_tra)
-
-
-ggplot(x=residuos_tra) +   geom_histogram()
-
-qqnorm(residuos_tra, 
-       ylab="Residuals", main="")
-#se agrega la linea de 
-qqline(residuos_tra)
-
-```
+Así mismo en el set de validación tenemos una R² de **`r R2`** que es muy baja pero más grande que el primer modelo de regresión lineal, así como un MSE de **`r MSE `** y un MSRE de **`r sqrt(MSE) `**.
+Después de hacer la regresión se puede ver que, al igual que la primera regresión, los residuos obtenidos no cumplen con los supuesto que requiere una regresión lineal. Es decir, no tienen una distribución normal y al graficarlos parecen tener cierta tendencia. Por estas razones se puede decir que los residuos presentan heterocedasticidad.
 
 ***
 ###Arboles de regresión
 
-No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que el comportamiento del conjunto de datos puede ser no lineal, como vimos en la sección anterior. Debido a ello optaremos por usar regresión utilizando arboles, que como sabemos es una alternativa para modelos no lineales. A continuacion realizaremos nuestra regresión a partir de un minimo de 5 observaciones por hoja; a continuación veamos graficas de R^2 y de los errores relativos de acuerdo al numero de splits del algoritmo:
+No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que el comportamiento del conjunto de datos puede ser no lineal, como vimos en la sección anterior. Debido a ello optaremos por usar regresión utilizando árboles, que como sabemos es una alternativa para modelos no lineales. A continuación realizaremos nuestra regresión a partir de un mínimo de 5 observaciones por hoja; a continuación veamos graficas de R^2 y de los errores relativos de acuerdo al número de splits del algoritmo:
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-reg_tree <- rpart(train_set$pm2.5 ~., data=train_set, 
+reg_tree <- rpart(train_set$pm2.5 ~., data=data.frame(train_set), 
                   control=list(minsplit=5),
                   method="anova")
 summary(reg_tree)
@@ -455,12 +445,12 @@ rsq.rpart(reg_tree)
 
 ```
 
-Como podemos observar en las gráficas anteriores la regresión por este método no es demasiado buena, ya que con el set de entrenamiento tenemos un valor de R² bastante bajo de alrededor de .3 y errores relativos bastante altos superiores a .7. A pesar de lo anterior, buscaremos probar nuestro modelo con el set de entrenamiento con un numero de splits de 7 y por tanto un CP de .014697. Lo anterior es debido a que vemos que apartir de 7 splits, el error relativo y el R² ya no cambian demasiado.
+Como podemos observar en las gráficas anteriores la regresión por este método no es demasiado buena, ya que con el set de entrenamiento en el mejor de los casos tenemos un valor de R² bastante bajo de alrededor de .3 y errores relativos bastante altos superiores a .7. A pesar de lo anterior, buscaremos probar nuestro modelo con el set de entrenamiento con un numero de splits de 7 y por tanto un CP de .014697. Lo anterior es debido a que vemos que a partir de 7 splits, el error relativo y el R² ya no cambian demasiado.
 
-Ahora veamos una grafica de los residuales sobre el set de validación:
+Ahora veamos una gráfica de los residuales sobre el set de validación:
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 pruned_tree <- prune(reg_tree, cp=.014697)
-pruned_tree_predictions_val <- predict(pruned_tree, validation_set)
+pruned_tree_predictions_val <- predict(pruned_tree, data.frame(validation_set))
 residuals_pruned_tree_val <- validation_set$pm2.5 - pruned_tree_predictions_val
 df_2_val <- data.frame(fitted_values=pruned_tree_predictions_val,
                  residuals=residuals_pruned_tree_val)
@@ -477,28 +467,28 @@ R2 <- 1 - sum((validation_set$pm2.5-pruned_tree_predictions_val)^2)/sum((validat
 
 Como podemos observar de la gráfica anterior tenemos residuales relativamente altos, ya que vemos que hay bastantes puntos sobrepasando un residuo de 200, además, hay un MSE de **`r MSE `** y un MSRE de **`r sqrt(MSE) `**. Lo anterior, junto con que hay un R² de **`r R2`** nos dice que este modelo no es muy bueno para predecir los niveles de PM2.5.
 
-Como hemos visto en esta sección, un arbol de regresión no es lo suficientemente bueno para lo que queremos ya que tiene un R² bastante bajo, sin embargo, en la siguiente sección buscaremos utilizar muchos arboles de regresión para hacer una regresión mucho mejor, es decir, que utilizaremos Random Forest para hacer una regresión.
+Como hemos visto en esta sección, un árbol de regresión no es lo suficientemente bueno para lo que queremos ya que tiene un R² bastante bajo, sin embargo, en la siguiente sección buscaremos utilizar muchos árboles de regresión para hacer una regresión mucho mejor, es decir, que utilizaremos Random Forest para hacer una regresión.
 
 ***
 ###Random Forest
 
-Debido a que vimos que el rendimiento de un solo arbol de regresión era algo bajo, buscaremos mejorar la regresión con una gran cantidad de arboles. Utilizando distintos parametros de numero de arboles (100, 200, y 300), hemos visto que 200 dan un muy buen rendimiento, ya que tampoco queremos hacer overfitting del modelo. 
+Debido a que vimos que el rendimiento de un solo árbol de regresión era algo bajo, buscaremos mejorar la regresión con una gran cantidad de árboles. Utilizando distintos parámetros de numero de árboles (100, 200, y 300), hemos visto que 200 dan un muy buen rendimiento, ya que tampoco queremos hacer overfitting del modelo.  A su vez, intentamos eliminar la variable de dirección del aire, es decir, la variable cbwd, sin embargo, el rendimiento del modelo se vio disminuido.
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-train_rf <-train_set
-train_rf$cbwd <- NULL
-rf_reg <- randomForest(pm2.5 ~., data=train_rf, 
+rf_reg <- randomForest(pm2.5 ~., data=data.frame(train_set), 
                        ntree=200,
                        nodesize=7,
                        importance=T)
 varImpPlot(rf_reg)
 ```
 
-Con la grafica anterior podemos ver que las variables menos importancia tienen para este modelo son las variables de Ir e IS, y por el contrario la variable de temperatura de rocío es muy importante, asi como la variable que indica la velocidad del aire. Tambien, como notabamos en el Data Profiling y con el analisis exploratorio vemos que el dia y el mes tienen una importancia en el modelo. 
+Con la gráfica anterior podemos ver que las variables menos importancia tienen para este modelo son las variables de Ir, IS y Cbwd. Por el contrario la variable de temperatura de rocío, día, mes y velocidad del aire son de las más importantes, así como la presión y la temperatura. Como notábamos en el Data Profiling y con el análisis exploratorio vemos que el día y el mes tienen una importancia en el modelo. 
+
+A continuación veamos la gráfica de los residuales:
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 fitted_values_rf1_val <- predict(rf_reg, 
-                         newdata=validation_set,
+                         newdata=data.frame(validation_set),
                          type="response")
 
 residuals_rf1_val <- validation_set$pm2.5 - fitted_values_rf1_val
@@ -526,6 +516,47 @@ R2 <- 1 - sum((y-fitted_values_rf1_val)^2)/sum((y-mean(y))^2)
 R2
 ```
 
-Como podemos ver en la grafica de los residuales, la mayoria de estos no exceden las 200 unidades, y al mismo tiempo, estan mayormente concentrados en residuos menores a 100 unidades, lo cual es una gran mejora respecto a la regresión lineal y a la regresión por un solo arbol. Asi mismo, podemos observar que este es el modelo que mejor rendimiento tiene ya que tenemos una R² bastante proxima a 1 de **`r R2`**, asi como un MSE de **`r MSE `** y un MSRE de **`r sqrt(MSE) `**. Debido a los motivos anteriores este será el modelo que utilizaremos para nuestro set de pruebas.
+Como podemos ver en la gráfica de los residuales, la mayoría de estos no exceden las 200 unidades, y al mismo tiempo, están mayormente concentrados en residuos menores a 100 unidades, lo cual es una gran mejora respecto a la regresión lineal y a la regresión por un solo árbol. Así mismo, podemos observar que este es el modelo que mejor rendimiento tiene ya que tenemos una R² próxima a 1 de **`r R2`**, así como un MSE de **`r MSE `** y un MSRE de **`r sqrt(MSE) `**. Debido a los motivos anteriores este será el modelo que utilizaremos para nuestro set de pruebas.
 
 ## Mejor modelo en el set de pruebas
+
+Hagamos nuestra predicción sobre el set de pruebas:
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+fitted_values_rf1_val <- predict(rf_reg, 
+                         newdata=data.frame(test_set),
+                         type="response")
+
+residuals_rf1_val <- test_set$pm2.5 - fitted_values_rf1_val
+
+
+df_rf1_performance_val <- data.frame(fitted_values=fitted_values_rf1_val,
+                                residuals=residuals_rf1_val)
+
+df_rf1_performance_val[which(is.na(df_rf1_performance_val$fitted_values)), 
+                  "fitted_values"] <- 0
+
+ggplot(df_rf1_performance_val, aes(x=fitted_values, y=residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color="red") +
+  theme_bw()
+MSE <- mean(residuals_rf1_val^2)
+MSE
+
+MRSE <- sqrt(MSE)
+MRSE
+
+
+y <- test_set$pm2.5
+R2 <- 1 - sum((y-fitted_values_rf1_val)^2)/sum((y-mean(y))^2)
+R2
+```
+
+Podemos observar que la mayoría de los residuales se encuentran alrededor del 0, lo cual nos da indicios de que nuestro modelo tiene un rendimiento bastante decente. Además, los residuales se encuentran en su mayoría por debajo de las 100 unidades lo cual es bastante razonable tomando en cuenta la desviación estándar de todo el set de datos es de aproximadamente 92 unidades. Así mismo  tenemos un R² de **`r R2`**, así como un MSE de **`r MSE `** y un MSRE de **`r sqrt(MSE) `**. 
+
+
+## Conclusiones
+
+A lo largo de este trabajo pudimos observar que las variables descritas en el set de datos para nada tenían un comportamiento lineal respecto a la variable que indicaba los niveles de contaminación de Beijing. Es por ello que se recurrió a utilizar árboles para mejorar las predicciones, y definitivamente pudimos mejorarlas. 
+
