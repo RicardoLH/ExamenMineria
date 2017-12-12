@@ -285,10 +285,10 @@ A lo largo de este trabajo estaremos trabajando con distintos conjuntos para ent
 ###Regresión Lineal
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-train_set_reg <- select(train_set,  month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
-validation_set_reg <- select(validation_set, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+train_set_reg <- select(train_set, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+validation_set_reg <- select(validation_set, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
 
-regresion <- lm(pm2.5 ~  month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg)
+regresion <- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg)
 summary(regresion)
 ```
 
@@ -327,16 +327,6 @@ Con la gráfica Q-Q de una distribución normal se puede confirmar lo que el his
 regresion$coefficients
 ```
 
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-MSE_reg <- mean(regresion$residuals^2)
-MSE_reg
-MRSE_reg <- sqrt(MSE_reg)
-MRSE_reg
-#predict(regresion, validation_set_reg)
-#validation_set_reg$pm2.5
-
-```
-
 
 
 ####Transformación de variable Iws
@@ -354,17 +344,18 @@ for(i in 1:length(iws)){
 pollution_transf <- pollution[,-10]
 pollution_transf <- cbind2(pollution_transf, iws)
 names(pollution_transf)[12]<- "Iws"
+names(pollution_transf)
 
-ggplot(pollution_transf,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs ln(Isw)")
+ggplot(pollution_transf,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs Isw")
 ```
 
 Después de realizar la tansformación de la variable se puede ver que la relación ya es lineal así que se realizará una nueva regresión pero ya no se utilizará la variable Iws normal, sino la variable que se obtuvo del logaritmo de Iws.
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 train_set_transf <-pollution_transf %>% filter( year >= 2010 & year <= 2013)
-train_set_reg_tra <- select(train_set_transf, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
+train_set_reg_tra <- select(train_set_transf, year, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
 
-regresion_transf <- lm(pm2.5 ~  month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg_tra)
+regresion_transf <- lm(pm2.5 ~ year + month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg_tra)
 summary(regresion_transf)
 ```
 
@@ -401,21 +392,24 @@ qqline(residuals_df$residuals)
 
 Al igual que la primera regresión lineal que se realizó, los residuos no siguen una distribución normal y esto se puede ver claramente en la gráfica Q-Q.
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-regresion_transf$coefficients
-```
-
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
-MSE_reg_t <- mean(regresion_transf$residuals^2)
-MSE_reg_t
-MRSE_reg_t <- sqrt(MSE_reg)
-MRSE_reg_t
-#predict(regresion, validation_set_reg)
-#validation_set_reg$pm2.5
-
+regresion$coefficients
 ```
 
 ***
 ###Arboles de regresión
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+library(dummies)
+validation_set <- cbind(validation_set, dummy(validation_set$year, sep = "_"))
+train_set <- cbind(train_set, dummy(train_set$year, sep = "_"))
+train_set$year <- NULL
+validation_set$year <- NULL
+validation_set$train_set_2010 <- 0
+validation_set$train_set_2011 <- 0
+validation_set$train_set_2012 <- 0
+validation_set$train_set_2013 <- 1
+
+
+```
 
 No todo conjunto de datos puede ser aproximado por una regresión lineal, ya que el comportamiento del conjunto de datos puede ser no lineal. Debido a ello optaremos por usar regresión utilizando arboles, que como sabemos es una alternativa para modelos no lineales. A continuacion realizaremos nuestra regresión a partir de un minimo de 5 observaciones por hoja; a continuación veamos graficas de R^2 y de los errores relativos de acuerdo al numero de splits del algoritmo
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
@@ -444,11 +438,17 @@ ggplot(df_2_val, aes(x=fitted_values, y=residuals)) +
   theme_bw()
 MSE <- sum(residuals_pruned_tree_val^2)
 R2 <- 1 - sum((validation_set$pm2.5-pruned_tree_predictions_val)^2)/sum((validation_set$pm2.5-mean(validation_set$pm2.5))^2)
-
+MSE
+R2
 ```
 
-Como podemos observar de la gráfica anterior tenemos residuales bastantes altos! Ya que vemos que hay una concentración.
+Como podemos observar de la gráfica anterior tenemos residuales relativamente altos, ya que vemos que hay bastantes puntos sobrepasando un residuo de 200, además, hay un MSE de **`r MSE `**. Lo anterior, junto con que hay un R^2 de **`r R2`** nos dice que este modelo no está siendo muy bueno para predecir los niveles de PM2.5.
+
+Como hemos visto en esta sección, un arbol de regresión no es lo suficientemente bueno para lo que queremos ya que tiene un R^2 bastante bajo, sin embargo, en la siguiente sección buscaremos utilizar muchos arboles de regresión para hacer una regresión mucho mejor, es decir, que utilizaremos Random Forest para hacer una regresión.
 ###Random Forest
+
+Debido a que vimos que el rendimiento de un solo arbol de regresión era algo bajo, buscaremos mejorar la regresión con una gran cantidad de arboles. Utilizando distintos parametros de numero de arboles, hemos visto que 200 dan un muy buen rendimiento. 
+
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 train_rf <-train_set
 train_rf$cbwd <- NULL
@@ -458,6 +458,8 @@ rf_reg <- randomForest(pm2.5 ~., data=train_rf,
                        importance=T)
 varImpPlot(rf_reg)
 ```
+
+
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 fitted_values_rf1_val <- predict(rf_reg, 
                          newdata=validation_set,
@@ -476,11 +478,8 @@ ggplot(df_rf1_performance_val, aes(x=fitted_values, y=residuals)) +
   geom_point() +
   geom_hline(yintercept = 0, color="red") +
   theme_bw()
-MSE <- mean(residuals_rf1_val^2)
+MSE <- sum(residuals_rf1_val^2)
 MSE
-
-MRSE <- sqrt(MSE)
-MRSE
 
 
 y <- validation_set$pm2.5
