@@ -180,41 +180,49 @@ ggplot(pollution,aes(x = pm2.5, y =year ))+geom_point()+ggtitle("PM2.5 vs Año")
 ```
 
 En esta gráfica se puede notar que las observaciones de año vs PM2.5 no tienen mucha relación ya que se tienen todo tipo de muestras y no se puede ver que haya tendencia.
+
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =month ))+geom_point()+ggtitle("PM2.5 vs Mes")
 ```
 
 Aquí se puede notar un que existe una mayor relación entre Mes y PM2.5 que entre la variable objetivo y el año pero aún así se ve que no es muy fuerte la relación de estos datos.
+
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =day ))+geom_point()+ggtitle("PM2.5 vs Día")
 ```
 
 La variable de Día tampoco tiene una gran relación con la variable que estamos analizando, pero aún así se ve que puede proporcionar información sobre pm2.5
+
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =hour ))+geom_point()+ggtitle("PM2.5 vs Hora")
 ```
 
 El caso de la variable Hora es el mismo que las anteriores y es que como son variables discretas pueden llegar a presentar baja relación con la variable objetivo porque esta es de tipo continua. 
+
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =DEWP ))+geom_point()+ggtitle("PM2.5 vs DEWP")
 ```
 
 La variable DEWP tiene una relación con PM2.5 más alta que las anteriores y esto se puede ver porque entre más alto es el valor de PM2.5, los valores de DEWP se van acercando a un valor en específico cercano a -10 
+
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =TEMP ))+geom_point()+ggtitle("PM2.5 vs TEMP")
 ```
 
 Se puede ver que la Temperatura también tiene relación negativa con PM2.5 pero no es muy grande y es por eso que la línea que puede representar esta relación tiene una pendiente muy alta.
+
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =PRES ))+geom_point()+ggtitle("PM2.5 vs PRES")
 ```
 
 La presión parece tener una baja relación con la variable que estamos estudiando pero se puede afirmar que esta relación es positiva. Es importante señalar que también es un poco difícil de ver esta relación debido a que la variable de presión es discreta.
+
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =Iws ))+geom_point()+ggtitle("PM2.5 vs Isw")
 ```
 
 El caso de la relación de Isw con la variable PM2.5 es muy curioso porque se ve claramente que existe buena relación entre estas dos aunque no es de tipo lineal, pero también se puede ver muy fácil que si se hiciera una transformación de la variable Isw y se sacara nuevamente la gráfica se puede presentar una mejor relación.
+
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 ggplot(pollution,aes(x = pm2.5, y =Is ))+geom_point()+ggtitle("PM2.5 vs Is")
 ```
@@ -297,6 +305,7 @@ Se puede notar que todas la variables proporcionan buena información al modelo 
 ####Graficando los errores
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 fitted_values <- regresion$fitted.values
+fitted_values
 residuals <- regresion$residuals
 
 residuals_df <- data.frame(fitted_values=fitted_values,
@@ -332,9 +341,17 @@ MSE_reg <- mean(regresion$residuals^2)
 MSE_reg
 MRSE_reg <- sqrt(MSE_reg)
 MRSE_reg
-#predict(regresion, validation_set_reg)
-#validation_set_reg$pm2.5
+predi <- predict(regresion, validation_set_reg)
+residuos <- predi-validation_set_reg$pm2.5
+plot(residuos)
 
+
+ggplot(x=residuos) +   geom_histogram()
+
+qqnorm(residuos, 
+       ylab="Residuals", main="")
+#se agrega la linea de 
+qqline(residuos)
 ```
 
 
@@ -362,6 +379,8 @@ Después de realizar la tansformación de la variable se puede ver que la relaci
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 train_set_transf <-pollution_transf %>% filter( year >= 2010 & year <= 2013)
+validation_set_transf <- train_set[validation_rows,]
+train_set_transf <- train_set[-validation_rows,]
 train_set_reg_tra <- select(train_set_transf, month, day, hour,pm2.5, DEWP, TEMP, PRES, Iws, Ir, Is)
 
 regresion_transf <- lm(pm2.5 ~  month + day+ hour+ DEWP+ TEMP + PRES + Iws + Ir + Is,  data=train_set_reg_tra)
@@ -409,8 +428,17 @@ MSE_reg_t <- mean(regresion_transf$residuals^2)
 MSE_reg_t
 MRSE_reg_t <- sqrt(MSE_reg)
 MRSE_reg_t
-#predict(regresion, validation_set_reg)
-#validation_set_reg$pm2.5
+predi_tra <- predict(regresion_transf, validation_set_reg)
+residuos_tra <- predi_tra-validation_set_reg$pm2.5
+plot(residuos_tra)
+
+
+ggplot(x=residuos_tra) +   geom_histogram()
+
+qqnorm(residuos_tra, 
+       ylab="Residuals", main="")
+#se agrega la linea de 
+qqline(residuos_tra)
 
 ```
 
